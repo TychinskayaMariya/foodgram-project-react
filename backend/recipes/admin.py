@@ -1,14 +1,7 @@
 from django.contrib import admin
 
-from .models import (
-    Tag,
-    Ingredient,
-    Recipe,
-    IngredientRecipe,
-    Cart,
-    Follow,
-    Favorite
-)
+from .models import (Cart, Favorite, Follow, Ingredient, IngredientRecipe,
+                     Recipe, Tag)
 
 admin.site.empty_value_display = 'Значение не указано'
 
