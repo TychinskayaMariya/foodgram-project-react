@@ -43,8 +43,8 @@ jobs:
       run: |
         python -m flake8 backend/
 
-  build_and_push_to_docker_hub:
-    name: Push Docker image to Docker Hub
+  build_bacckend_and_push_to_docker_hub:
+    name: Push backend Docker image to DockerHub
     runs-on: ubuntu-latest
     needs: tests
     steps:
@@ -60,7 +60,7 @@ jobs:
       - name: Push to Docker Hub
         uses: docker/build-push-action@v4
         with:
-          context: backend/
+          context: ./backend/
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
   
@@ -102,14 +102,14 @@ jobs:
       - name: Push to DockerHub
         uses: docker/build-push-action@v4
         with:
-          context: ./infra/
+          context: ./nginx/
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_gateway:latest
   
   deploy:
     runs-on: ubuntu-latest
     needs: 
-      - build_and_push_to_docker_hub
+      - build_backend_and_push_to_docker_hub
       - build_frontend_and_push_to_docker_hub
       - build_gateway_and_push_to_docker_hub
     steps:
@@ -137,8 +137,8 @@ jobs:
           sudo docker compose -f docker-compose.yml down
           sudo docker compose -f docker-compose.yml up -d
           sudo docker compose -f docker-compose.yml exec backend python manage.py migrate
-          sudo docker compose -f docker-compose.yml exec backend python manage.py collectstatic
-          sudo docker compose -f docker-compose.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+          sudo docker compose -f docker-compose.yml exec backend python manage.py collectstatic --noinput
+          sudo docker system prune -a
 
   send_message:
     runs-on: ubuntu-latest
