@@ -1,43 +1,41 @@
 version: '3.3'
 
 volumes:
-  pg_data:
+  pg_data_production:
   static:
   media:
 
 services:
-
   db:
-    image: postgres:14
+    image: postgres:13.10-alpine
     env_file: .env
     volumes:
-      - pg_data:/var/lib/postgresql/data
-  
+      - pg_data_production:/var/lib/postgresql/data
+
   backend:
-    image: tychinkamary/foodgram_backend:latest
-    volumes:
-      - static:/backend_static
-      - media:/media
+    image: tychinkamary/foodgram_backend
+    env_file: .env
+    restart: always
     depends_on:
       - db
-    env_file:
-      - ./.env
-  
+    volumes:
+      - static:/backend_static
+      - media:/app/media
+
   frontend:
-    env_file: .env
-    image: tychinkamary/foodgram_frontend:latest
-    command: cp -r /app/build/. /frontend_static/
+    image: tychinkamary/foodgram_frontend
+    command: cp -r /app/build/. /static/
     volumes:
       - static:/frontend_static
-  
+
   gateway:
-    image: tychinkamary/foodgram_gateway:latest
+    image: tychinkamary/foodgram_gateway
+    env_file: .env
     ports:
       - 8000:80
     volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./frontend/build:/usr/share/nginx/html/
       - ./docs/:/usr/share/nginx/html/api/docs/
-      - static:/staticfiles
-      - media:/media
-    depends_on:
-      - backend
+      - static:/static
+      - media:/app/media
