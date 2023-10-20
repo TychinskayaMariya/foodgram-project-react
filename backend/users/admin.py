@@ -1,11 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User
+from .models import Follow, User
 
 
 @admin.register(User)
-class UserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin):
     """Админ-панель управления пользователями."""
 
     list_display = (
@@ -19,3 +19,9 @@ class UserAdmin(UserAdmin):
     list_filter = ('username', 'email')
     ordering = ('username', )
     empty_value_display = 'Значение не указано'
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'author')
+    search_fields = ('user__username', 'author__username')

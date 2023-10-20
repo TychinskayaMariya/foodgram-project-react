@@ -1,7 +1,7 @@
 version: '3.3'
 
 volumes:
-  pg_data:
+  pg_data1:
   static:
   media:
 
@@ -11,10 +11,11 @@ services:
     image: postgres:latest
     env_file: ./.env
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data1:/var/lib/postgresql/data
   
   backend:
     image: tychinkamary/foodgram_backend:latest
+    restart: always
     env_file: ./.env
     depends_on:
       - db
@@ -34,6 +35,7 @@ services:
     env_file: ./.env
     depends_on:
       - frontend
+    restart: always
     ports:
       - "8000:80"
     volumes:

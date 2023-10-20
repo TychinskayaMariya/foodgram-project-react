@@ -1,13 +1,10 @@
 from django_filters.rest_framework import FilterSet, filters
 from recipes.models import Ingredient, Recipe, Tag
 
-FILTER_USER = {'favorites': 'favorites__user',
-               'shop_list': 'shop_list__user'}
 
-
-class IngredientSearchFilter(FilterSet):
+class IngredientFilter(FilterSet):
     """Поиск по названию ингредиента."""
-    name = filters.CharFilter(lookup_expr='istartswith')
+    name = filters.CharFilter(lookup_expr='startswith')
 
     class Meta:
         model = Ingredient
@@ -17,6 +14,7 @@ class IngredientSearchFilter(FilterSet):
 class RecipeFilter(FilterSet):
     """Фильтр для рецептов."""
 
+    author = filters.CharFilter(field_name='author__id')
     tags = filters.ModelMultipleChoiceFilter(
         field_name='tags__slug',
         to_field_name='slug',
@@ -31,13 +29,14 @@ class RecipeFilter(FilterSet):
         model = Recipe
         fields = ('tags', 'author', 'is_favorited', 'is_in_cart')
 
-    def _get_queryset(self, queryset, name, value, model):
-        if value:
-            return queryset.filter(**{FILTER_USER[model]: self.request.user})
+    def filter_is_favorited(self, queryset, name, value):
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(favorites__user=user)
         return queryset
 
-    def filter_is_favorited(self, queryset, name, value):
-        return self._get_queryset(queryset, name, value, 'favorites')
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        return self._get_queryset(queryset, name, value, 'shop_list')
+    def filter_is_in_cart(self, queryset, name, value):
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(in_cart__user=user)
+        return queryset
