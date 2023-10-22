@@ -143,19 +143,19 @@ class IngredientRecipe(models.Model):
         return f'{self.ingredient.name} {self.amount}'
 
 
-class Cart(models.Model):
+class ShoppingCart(models.Model):
     """Модель для формирования списка покупок в корзине."""
 
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='cart',
+        related_name='shopping_cart',
         verbose_name='Пользователь',
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='in_cart',
+        related_name='in_shopping_cart',
         verbose_name='Рецепт',
     )
 
@@ -164,7 +164,7 @@ class Cart(models.Model):
         verbose_name_plural = 'Список покупок'
         constraints = [
             models.UniqueConstraint(
-                fields=['recipe', 'user'], name='unique_cart_recipe'
+                fields=['recipe', 'user'], name='unique_shopping_cart_recipe'
             )
         ]
 

@@ -4,8 +4,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import (Cart, Favorite, Ingredient, IngredientRecipe,
-                            Recipe, Tag)
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
@@ -34,7 +34,7 @@ class CustomUserViewSet(UserViewSet):
     def subscriptions(self, request):
         """Возвращает список подписок пользователя."""
 
-        queryset = User.objects.filter(follow__user=request.user)
+        queryset = User.objects.filter(subscribers__user=request.user)
         pages = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
             pages, many=True, context={'request': request}
@@ -144,27 +144,28 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=True,
         methods=['post', 'delete']
     )
-    def cart(self, request, pk):
+    def shopping_cart(self, request, pk):
         """Добавляет или удаляет рецепт из списка покупок пользователя."""
 
         if request.method == 'POST':
-            return self.add_to(Cart, request.user, pk)
-        return self.delete_from(Cart, request.user, pk)
+            return self.add_to(ShoppingCart, request.user, pk)
+        return self.delete_from(ShoppingCart, request.user, pk)
 
     @action(
         detail=False,
+        methods=['get'],
         permission_classes=[IsAuthenticated]
     )
-    def download_cart(self, request):
+    def download_shopping_cart(self, request):
         """Создает файл со списком покупок пользователя для скачивания."""
 
         user = request.user
-        if not user.cart.exists():
+        if not user.shopping_cart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         ingredients = (
             IngredientRecipe.objects
-            .filter(recipelistsuser=request.user)
+            .filter(recipe__in_shopping_cart__user=request.user)
             .values('ingredient')
             .annotate(total_amount=Sum('amount'))
             .values_list('ingredient__name',
