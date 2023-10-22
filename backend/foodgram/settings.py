@@ -1,10 +1,6 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'secret_key')
@@ -67,7 +63,7 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DB', 'foodgram'),
         'USER': os.getenv('POSTGRES_USER', 'foodgram'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'HOST': os.getenv('DB_HOST', ''),
         'PORT': os.getenv('DB_PORT', 5432)
     }
 }

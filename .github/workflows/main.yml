@@ -10,14 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:13
+        image: postgres:13.10
         env:
-          POSTGRES_USER: kittygram_user
-          POSTGRES_PASSWORD: kittygram_password
-          POSTGRES_DB: kittygram
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: кщще
+          POSTGRES_DB: foodgram
         ports:
           - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
@@ -33,9 +34,9 @@ jobs:
 
     - name: Test with flake8
       env:
-        POSTGRES_USER: kittygram_user
-        POSTGRES_PASSWORD: kittygram_password
-        POSTGRES_DB: kittygram
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: kкщще
+        POSTGRES_DB: foodgram
         DB_HOST: 127.0.0.1
         DB_PORT: 5432
       run: |
@@ -104,8 +105,7 @@ jobs:
             sudo docker compose -f docker-compose.production.yml up -d
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
             sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
-            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/
-            sudo docker system prune -af
+            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
 
   send_message:
     runs-on: ubuntu-latest

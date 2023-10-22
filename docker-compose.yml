@@ -5,26 +5,24 @@ volumes:
   static:
   media:
 
-
 services:
   db:
-    image: postgres:latest
-    env_file: ./.env
+    image: postgres:13
+    env_file: .env
     volumes:
       - pg_data1:/var/lib/postgresql/data
   
   backend:
-    image: tychinkamary/foodgram_backend:latest
-    restart: always
-    env_file: ./.env
+    build: ./backend/
+    env_file: .env
     depends_on:
       - db
     volumes:
-      - static:/static
-      - media:/app/media
+      - static:/backend_static
+      - media:/app/media/
   
   frontend:
-    image: tychinkamary/foodgram_frontend:latest
+    build: ./frontend/
     depends_on:
       - backend
     volumes:
@@ -32,10 +30,9 @@ services:
 
   nginx:
     image: nginx:latest
-    env_file: ./.env
+    env_file: .env
     depends_on:
       - frontend
-    restart: always
     ports:
       - "8000:80"
     volumes:
@@ -43,4 +40,4 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/static
-      - media:/app/media
+      - media:/app/media/
