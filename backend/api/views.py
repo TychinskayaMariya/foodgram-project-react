@@ -1,5 +1,4 @@
 from api.pagination import CustomPagination
-from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -163,17 +162,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if not user.shopping_cart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        ingredients = (
-            IngredientRecipe.objects
-            .filter(recipe__in_shopping_cart__user=request.user)
-            .values('ingredient')
-            .annotate(total_amount=Sum('amount'))
-            .values_list('ingredient__name',
-                         'ingredient__measurements_unit',
-                         'total_amount')
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__in_shopping_cart__user=request.user
+        ).values_list(
+            'ingredient__name',
+            'amount',
+            'ingredient__measurement_unit',
         )
-        shopping_list = [('{} ({}) - {}'.format(*ingredient) + '\n')
-                         for ingredient in ingredients]
-        response = HttpResponse('Cписок покупок:\n' + '\n'.join(shopping_list),
-                                content_type='text/plain')
+
+        ingredient_dict = {}
+        for name, amount, unit in ingredients:
+            if name not in ingredient_dict:
+                ingredient_dict[name] = {'amount': amount, 'unit': unit}
+            else:
+                ingredient_dict[name]['amount'] += amount
+
+        ingredient_list = []
+        for name, data in ingredient_dict.items():
+            ingredient_list.append(
+                f"{name} ({data['unit']}) - {data['amount']}"
+            )
+
+        response = HttpResponse(
+            'Cписок покупок:\n' + '\n'.join(ingredient_list),
+            content_type='text/plain'
+        )
         return response
