@@ -59,12 +59,11 @@ class CustomUserViewSet(UserViewSet):
             Follow.objects.create(user=user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(
-                Follow, user=user, author=author
-            )
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        subscription = get_object_or_404(
+            Follow, user=user, author=author
+        )
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -128,6 +127,32 @@ class RecipeViewSet(viewsets.ModelViewSet):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    @staticmethod
+    def get_shopping_cart(user):
+        """Формирует список покупок."""
+
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__in_shopping_cart__user=user.user
+        ).values_list(
+            'ingredient__name',
+            'amount',
+            'ingredient__measurement_unit',
+        )
+
+        ingredient_dict = {}
+        for name, amount, unit in ingredients:
+            if name not in ingredient_dict:
+                ingredient_dict[name] = {'amount': amount, 'unit': unit}
+            else:
+                ingredient_dict[name]['amount'] += amount
+
+        ingredient_list = []
+        for name, data in ingredient_dict.items():
+            ingredient_list.append(
+                f"{name} ({data['unit']}) - {data['amount']}"
+            )
+        return ingredient_list
+
     @action(
         detail=True,
         methods=['post', 'delete']
@@ -162,26 +187,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if not user.shopping_cart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        ingredients = IngredientRecipe.objects.filter(
-            recipe__in_shopping_cart__user=request.user
-        ).values_list(
-            'ingredient__name',
-            'amount',
-            'ingredient__measurement_unit',
-        )
-
-        ingredient_dict = {}
-        for name, amount, unit in ingredients:
-            if name not in ingredient_dict:
-                ingredient_dict[name] = {'amount': amount, 'unit': unit}
-            else:
-                ingredient_dict[name]['amount'] += amount
-
-        ingredient_list = []
-        for name, data in ingredient_dict.items():
-            ingredient_list.append(
-                f"{name} ({data['unit']}) - {data['amount']}"
-            )
+        ingredient_list = self.get_shopping_cart(request)
 
         response = HttpResponse(
             'Cписок покупок:\n' + '\n'.join(ingredient_list),
