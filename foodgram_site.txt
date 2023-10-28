@@ -1,0 +1,5 @@
+IP: 158.160.78.63;
+name_foodgram: https://tych-foodgram.hopto.org;
+login: admin;
+e-mail: admin@foodgram.com;
+password: admin
